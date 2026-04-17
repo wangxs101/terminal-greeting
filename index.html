@@ -157,21 +157,41 @@
 
         document.getElementById('platform-info').textContent = 'Platform: ' + platform;
 
-        // Always show the greeting rendered in browser (works everywhere)
-
-        const macUrl = 'x-man-page://%5C033c%5C033%5B38%3B5%3B174m%5C033%5B48%3B5%3B16m%20%E2%96%90%E2%96%9B%E2%96%88%E2%96%88%E2%96%88%E2%9C%E2%96%8C%20%20Hi%5C033%5B0m%5C033%5D2%3B%5Ca';
-        const winCmd = '$e=[char]27; Write-Host "${e}[38;5;174m${e}[48;5;16m \u2590\u259B\u2588\u2588\u2588\u259C\u258C  Hi${e}[0m"';
-        const macCmd = "echo -e '\\033[38;5;174m\\033[48;5;16m \u2590\u259B\u2588\u2588\u2588\u259C\u258C  Hi\\033[0m'";
-
-        if (isMac) {
-            document.getElementById('launch-terminal').style.display = 'inline-flex';
-            document.getElementById('launch-terminal').onclick = () => window.location.href = macUrl;
-            document.getElementById('cmd-text').textContent = macCmd;
-        } else if (isWin) {
-            document.getElementById('cmd-text').textContent = winCmd;
-        } else {
-            document.getElementById('cmd-text').textContent = macCmd;
+        // 从页面内容动态生成命令,改文字时命令自动更新
+        function getGreetingText() {
+            return document.querySelector('.greeting').textContent.trim();
         }
+
+        function buildCommands(text) {
+            // 转义 shell 特殊字符
+            var escaped = text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/'/g, "'\\''");
+            var winEscaped = text.replace(/\\/g, '\\\\').replace(/"/g, '`"');
+
+            return {
+                mac: "echo -e '\\033[38;5;174m\\033[48;5;16m " + escaped + "\\033[0m'",
+                win: '$e=[char]27; Write-Host "${e}[38;5;174m${e}[48;5;16m ' + winEscaped + '${e}[0m"',
+            };
+        }
+
+        function updateCommands() {
+            var text = getGreetingText();
+            var cmds = buildCommands(text);
+
+            if (isMac) {
+                document.getElementById('launch-terminal').style.display = 'inline-flex';
+                // x-man-page URL 也动态生成
+                var urlEncoded = encodeURIComponent('\\033c\\033[38;5;174m\\033[48;5;16m ' + text + '\\033[0m\\033]2;\\a');
+                document.getElementById('launch-terminal').onclick = () => window.location.href = 'x-man-page://' + urlEncoded;
+                document.getElementById('cmd-text').textContent = cmds.mac;
+            } else if (isWin) {
+                document.getElementById('cmd-text').textContent = cmds.win;
+            } else {
+                document.getElementById('cmd-text').textContent = cmds.mac;
+            }
+        }
+
+        // 初始化
+        updateCommands();
 
         function copyCmd() {
             const text = document.getElementById('cmd-text').textContent;
