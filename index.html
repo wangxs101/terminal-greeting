@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Greeting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000000;
+            color: #d67070;
+            font-family: 'Courier New', 'Consolas', 'Cascadia Mono', 'SF Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .greeting {
+            display: inline-block;
+            background: #000000;
+            color: #d67070;
+            padding: 0.25rem 0.5rem;
+            font-size: clamp(1.25rem, 4vw, 2rem);
+            font-weight: bold;
+            line-height: 1.4;
+            white-space: pre;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 0.6em;
+            height: 1.2em;
+            background: #d67070;
+            animation: blink 1s step-end infinite;
+            vertical-align: text-bottom;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 0.625rem 1.25rem;
+            color: #aaa;
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+
+        .btn:hover {
+            background: #2a2a2a;
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        .btn.primary {
+            background: #d67070;
+            border-color: #d67070;
+            color: #fff;
+        }
+
+        .btn.primary:hover {
+            background: #c05050;
+        }
+
+        .platform-info {
+            color: #444;
+            font-size: 0.75rem;
+        }
+
+        .manual-cmd {
+            display: none;
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 6px;
+            padding: 1rem;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .manual-cmd code {
+            color: #4ade80;
+            font-size: 0.8rem;
+            word-break: break-all;
+        }
+
+        .manual-cmd .copy-btn {
+            background: #222;
+            border: 1px solid #444;
+            color: #888;
+            border-radius: 4px;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            font-family: inherit;
+        }
+
+        .manual-cmd .copy-btn:hover {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="greeting">▐▛███▜▌  Hi</div><span class="cursor"></span>
+    </div>
+
+    <div class="actions">
+        <button class="btn primary" id="launch-terminal" style="display:none;">
+            Open in Terminal
+        </button>
+        <button class="btn" id="copy-cmd">
+            Copy Command
+        </button>
+    </div>
+
+    <div class="manual-cmd" id="manual-cmd">
+        <code id="cmd-text"></code>
+        <br>
+        <button class="copy-btn" onclick="copyCmd()">Copy</button>
+    </div>
+
+    <div class="platform-info" id="platform-info"></div>
+
+    <script>
+        const ua = navigator.userAgent;
+        const isMac = /Mac|iPod|iPhone|iPad/.test(ua);
+        const isWin = /Win/.test(ua);
+        const platform = isMac ? 'macOS' : isWin ? 'Windows' : 'Linux';
+
+        document.getElementById('platform-info').textContent = 'Platform: ' + platform;
+
+        // Always show the greeting rendered in browser (works everywhere)
+
+        const macUrl = 'x-man-page://%5C033c%5C033%5B38%3B5%3B174m%5C033%5B48%3B5%3B16m%20%E2%96%90%E2%96%9B%E2%96%88%E2%96%88%E2%96%88%E2%9C%E2%96%8C%20%20Hi%5C033%5B0m%5C033%5D2%3B%5Ca';
+        const winCmd = '$e=[char]27; Write-Host "${e}[38;5;174m${e}[48;5;16m \u2590\u259B\u2588\u2588\u2588\u259C\u258C  Hi${e}[0m"';
+        const macCmd = "echo -e '\\033[38;5;174m\\033[48;5;16m \u2590\u259B\u2588\u2588\u2588\u259C\u258C  Hi\\033[0m'";
+
+        if (isMac) {
+            document.getElementById('launch-terminal').style.display = 'inline-flex';
+            document.getElementById('launch-terminal').onclick = () => window.location.href = macUrl;
+            document.getElementById('cmd-text').textContent = macCmd;
+        } else if (isWin) {
+            document.getElementById('cmd-text').textContent = winCmd;
+        } else {
+            document.getElementById('cmd-text').textContent = macCmd;
+        }
+
+        function copyCmd() {
+            const text = document.getElementById('cmd-text').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+            });
+        }
+
+        document.getElementById('copy-cmd').onclick = () => {
+            document.getElementById('manual-cmd').style.display = 'block';
+            copyCmd();
+        };
+    </script>
+</body>
+</html>
