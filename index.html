@@ -175,6 +175,7 @@
 
         function updateCommands() {
             var text = getGreetingText();
+            document.title = text;
             var cmds = buildCommands(text);
 
             if (isMac) {
